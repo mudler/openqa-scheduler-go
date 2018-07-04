@@ -49,10 +49,10 @@ func main() {
 	}
 	fmt.Println("We have a solution!")
 	fmt.Println(model)
-
 	for k, v := range model {
-		if v {
-			fmt.Println(k, "=", v)
+		if w, test, err := s.DecodeAssignment(k); err == nil && v {
+			fmt.Println("Test:", test.Name, "Assigned to worker:", w.Name)
 		}
 	}
+
 }
