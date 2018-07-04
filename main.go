@@ -41,8 +41,8 @@ func main() {
 	t4.AddWorkerClass("qemu64")
 
 	s := scheduler.NewScheduler(workers, tests)
-	model, err := s.Schedule()
-
+	model, f, err := s.Schedule()
+	fmt.Println(f)
 	if err != nil {
 		fmt.Println("Error", err)
 		return
