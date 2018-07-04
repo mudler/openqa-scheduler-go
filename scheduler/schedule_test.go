@@ -28,7 +28,10 @@ func TestSchedule(t *testing.T) {
 	workers := encoder.NewWorkerColl()
 
 	w1 := workers.NewWorker("mudler")
+	workers.NewWorker("mudler_away")
 	t1 := tests.NewTest("lunch")
+	tests.NewTest("hiking")
+
 	w1.AddWorkerClass("developer")
 	t1.AddWorkerClass("developer")
 
