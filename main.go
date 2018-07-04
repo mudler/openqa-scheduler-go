@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	encoder "github.com/mudler/openqa-scheduler/encoder"
-	scheduler "github.com/mudler/openqa-scheduler/scheduler"
+	encoder "github.com/mudler/openqa-scheduler-go/encoder"
+	scheduler "github.com/mudler/openqa-scheduler-go/scheduler"
 )
 
 func main() {

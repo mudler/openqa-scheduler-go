@@ -17,7 +17,6 @@ help:
 	# make build - build project for all supported OSes
 
 clean:
-	rm -rf vendor/
 	rm -rf release/
 
 deps:
@@ -29,6 +28,9 @@ deps:
 	go get github.com/mattn/goveralls
 
 build:
+	go build
+	
+gox-build:
 	# Building gitlab-ci-multi-runner for $(BUILD_PLATFORMS)
 	gox $(BUILD_PLATFORMS) -output="release/$(NAME)-$(VERSION)-{{.OS}}-{{.Arch}}"
 
