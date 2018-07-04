@@ -67,8 +67,7 @@ func (s *Scheduler) TaskState(t *encoder.Test, state string) string {
 	return fmt.Sprintf(stateFmt, t.Encode(), state)
 }
 
-func (s *Scheduler) Schedule() (map[string]bool, bf.Formula, error) {
-
+func (s *Scheduler) BuildFormula() bf.Formula {
 	f := bf.True
 	// TODO: This is very raw and all have at least to go to binary encoding and avoid wasting cycles
 	// Optimization needed
@@ -102,10 +101,17 @@ func (s *Scheduler) Schedule() (map[string]bool, bf.Formula, error) {
 
 		f = bf.And(f, bf.Or(vars...))
 	}
+	return f
+}
 
+func (s *Scheduler) Solve(f bf.Formula) (map[string]bool, bf.Formula, error) {
 	model := bf.Solve(f)
 	if model == nil {
 		return model, f, errors.New("Error: cannot assign tests to workers")
 	}
 	return model, f, nil
+}
+
+func (s *Scheduler) Schedule() (map[string]bool, bf.Formula, error) {
+	return s.Solve(s.BuildFormula())
 }
