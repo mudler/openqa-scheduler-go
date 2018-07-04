@@ -41,7 +41,7 @@ func NewScheduler(WorkerColl *encoder.WorkerColl, TestColl *encoder.TestColl) *S
 }
 
 func (s *Scheduler) Assign(w *encoder.Worker, t *encoder.Test) string {
-	return fmt.Sprintf(assignFmt, t.Name, w.Name)
+	return fmt.Sprintf(assignFmt, t.Encode(), w.Encode())
 }
 
 func (s *Scheduler) DecodeAssignment(assignment string) (*encoder.Worker, *encoder.Test, error) {
@@ -64,10 +64,10 @@ func (s *Scheduler) DecodeAssignment(assignment string) (*encoder.Worker, *encod
 }
 
 func (s *Scheduler) TaskState(t *encoder.Test, state string) string {
-	return fmt.Sprintf(stateFmt, t.Name, state)
+	return fmt.Sprintf(stateFmt, t.Encode(), state)
 }
 
-func (s *Scheduler) Schedule() (map[string]bool, error) {
+func (s *Scheduler) Schedule() (map[string]bool, bf.Formula, error) {
 
 	f := bf.True
 	// TODO: This is very raw and all have at least to go to binary encoding and avoid wasting cycles
@@ -95,7 +95,6 @@ func (s *Scheduler) Schedule() (map[string]bool, error) {
 				for _, i := range doesnotaccept {
 					// For each of it, bind it to not acceptance of other tasks
 					final_formula = bf.And(final_formula, i)
-
 				}
 				vars = append(vars, final_formula) // bf.And(bf.Var(w.Encode()), bf.Var(t.Encode()), bf.Var(w.Name+".accepts."+t.Name), doesnotaccept...))
 			}
@@ -104,10 +103,9 @@ func (s *Scheduler) Schedule() (map[string]bool, error) {
 		f = bf.And(f, bf.Or(vars...))
 	}
 
-	fmt.Println(f)
 	model := bf.Solve(f)
 	if model == nil {
-		return model, errors.New("Error: cannot assign tests to workers")
+		return model, f, errors.New("Error: cannot assign tests to workers")
 	}
-	return model, nil
+	return model, f, nil
 }
