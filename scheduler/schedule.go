@@ -18,22 +18,19 @@ package scheduler
 import (
 	"errors"
 	"fmt"
-	"strings"
+
+	"github.com/mudler/openqa-scheduler-go/common"
 
 	"github.com/crillab/gophersat/bf"
+	"github.com/mudler/openqa-scheduler-go/decoder"
 	"github.com/mudler/openqa-scheduler-go/encoder"
 )
-
-const assignSep = "@"
-const assignFmt = "%s" + assignSep + "%s"
-const stateSep = "!"
-const stateFmt = "%s" + stateSep + "%s"
-
-const STATE_RUNNING = "running"
 
 type Scheduler struct {
 	WorkerCollection *encoder.WorkerColl
 	TestCollection   *encoder.TestColl
+
+	InitialState []*decoder.Assignment
 }
 
 func NewScheduler(WorkerColl *encoder.WorkerColl, TestColl *encoder.TestColl) *Scheduler {
@@ -41,34 +38,21 @@ func NewScheduler(WorkerColl *encoder.WorkerColl, TestColl *encoder.TestColl) *S
 }
 
 func (s *Scheduler) Assign(w *encoder.Worker, t *encoder.Test) string {
-	return fmt.Sprintf(assignFmt, t.Encode(), w.Encode())
+	return decoder.NewAssignment(t, w, common.STATE_CURRENT, true).Encode()
 }
 
-func (s *Scheduler) DecodeAssignment(assignment string) (*encoder.Worker, *encoder.Test, error) {
-	if !strings.Contains(assignment, assignSep) {
-		return &encoder.Worker{}, &encoder.Test{}, errors.New("Decode error: malformed string")
-	}
-	data_row := strings.Split(assignment, assignSep)
-	if len(data_row) != 2 {
-		return &encoder.Worker{}, &encoder.Test{}, errors.New("Decode error: malformed string")
-	}
-	t, err := encoder.DecodeTest(data_row[0])
-	if err != nil {
-		return &encoder.Worker{}, &encoder.Test{}, err
-	}
-	w, err := encoder.DecodeWorker(data_row[1])
-	if err != nil {
-		return &encoder.Worker{}, &encoder.Test{}, err
-	}
-	return w, t, nil
+func (s *Scheduler) AssignState(state string, w *encoder.Worker, t *encoder.Test) string {
+	return decoder.NewAssignment(t, w, state, true).Encode()
 }
 
 func (s *Scheduler) TaskState(t *encoder.Test, state string) string {
-	return fmt.Sprintf(stateFmt, t.Encode(), state)
+	return fmt.Sprintf(common.StateFmt, t.Encode(), state)
 }
 
 func (s *Scheduler) BuildFormula() bf.Formula {
 	f := bf.True
+
+	// TODO: Consider split solving in multiple worker/tests chunks and re-run itself
 	// TODO: This is very raw and all have at least to go to binary encoding and avoid wasting cycles
 	// Optimization needed
 
@@ -89,8 +73,13 @@ func (s *Scheduler) BuildFormula() bf.Formula {
 				}
 
 				// But if we accept it, task and worker goes together, and we set it to accepted
-				final_formula := bf.And(bf.Var(w.Encode()), bf.Var(t.Encode()), bf.Var(s.TaskState(t, STATE_RUNNING)), bf.Var(s.Assign(w, t)))
-
+				final_formula := bf.And(
+					bf.Var(w.Encode()),
+					bf.Var(t.Encode()),
+					bf.Var(s.TaskState(t, common.STATE_RUNNING)),
+					bf.Var(s.Assign(w, t)), bf.Not(bf.Var(s.AssignState(common.STATE_OLD, w, t))), // Assign if not already in initial state
+				)
+				//option 2: filter from encoding the tasks already running in InitialState
 				for _, i := range doesnotaccept {
 					// For each of it, bind it to not acceptance of other tasks
 					final_formula = bf.And(final_formula, i)
@@ -100,6 +89,21 @@ func (s *Scheduler) BuildFormula() bf.Formula {
 		}
 
 		f = bf.And(f, bf.Or(vars...))
+	}
+
+	var vars []bf.Formula = make([]bf.Formula, 0)
+	// Apply initial state
+	if s.InitialState != nil {
+		for _, a := range s.InitialState {
+			a.State = common.STATE_OLD
+			if a.Value {
+				vars = append(vars, bf.Var(a.Encode()))
+			} else {
+				vars = append(vars, bf.Not(bf.Var(a.Encode())))
+			}
+		}
+		vars = append(vars, f)
+		f = bf.And(vars...)
 	}
 	return f
 }
@@ -114,4 +118,13 @@ func (s *Scheduler) Solve(f bf.Formula) (map[string]bool, bf.Formula, error) {
 
 func (s *Scheduler) Schedule() (map[string]bool, bf.Formula, error) {
 	return s.Solve(s.BuildFormula())
+}
+
+func (s *Scheduler) ScheduleDecode() ([]*decoder.Assignment, error) {
+	model, _, err := s.Schedule()
+	if err != nil {
+		return []*decoder.Assignment{}, err
+	}
+	ass := decoder.DecodeModel(model)
+	return ass, nil
 }

@@ -33,18 +33,6 @@ func TestAdd(t *testing.T) {
 		t.Fatal("Test not added to the test list", tests)
 	}
 
-	t2, err := DecodeTest(t1.Encode())
-	if err != nil {
-		t.Fatal("Error while decoding test", err)
-	}
-
-	if t2.Name != "t1" {
-		t.Fatal("Test not Decoded correctly", t2)
-	}
-	if !t2.RequiresWorkerClass("qemu32") {
-		t.Fatal("Test requires qemu32")
-	}
-
 }
 
 func TestTestsColl(t *testing.T) {

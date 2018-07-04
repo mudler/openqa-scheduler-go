@@ -29,7 +29,7 @@ deps:
 
 build:
 	go build
-	
+
 gox-build:
 	# Building gitlab-ci-multi-runner for $(BUILD_PLATFORMS)
 	gox $(BUILD_PLATFORMS) -output="release/$(NAME)-$(VERSION)-{{.OS}}-{{.Arch}}"
@@ -40,7 +40,7 @@ lint:
 
 test:
 	# Running tests... ${TOTEST}
-	go test -v -cover ./...
+	go test -race -v -cover ./...
 
 build-and-deploy:
 	make build BUILD_PLATFORMS="-os=linux -arch=amd64"

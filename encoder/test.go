@@ -18,11 +18,11 @@ package encoder
 import (
 	"fmt"
 	"strings"
+
+	"github.com/mudler/openqa-scheduler-go/common"
 )
 
 var tests []*Test
-
-const testEncodeFormat = "%s#%s#%s#%s"
 
 type TestColl struct {
 	Tests []*Test
@@ -46,27 +46,6 @@ type Test struct {
 	Name        string
 	Parent      string
 	Parallel    []string
-}
-
-func DecodeTest(test string) (*Test, error) {
-	test_att := strings.Split(test, "#")
-	t := &Test{}
-
-	t.Name = test_att[0]
-
-	if len(test_att) > 2 {
-		test_worker_class := test_att[1]
-		test_parent := test_att[2]
-		test_parallel := test_att[3]
-		t.Parent = test_parent
-
-		wc := strings.Split(test_worker_class, ",")
-		p := strings.Split(test_parallel, ",")
-		t.WorkerClass = wc
-		t.Parallel = p
-	}
-
-	return t, nil
 }
 
 func NewTest(name string) *Test {
@@ -102,10 +81,9 @@ func (t *Test) AddParallel(p string) {
 }
 
 func (t *Test) Encode() string {
-	w_class := strings.Join(t.WorkerClass, ",")
-	p := strings.Join(t.Parallel, ",")
-
-	return fmt.Sprintf(attFmt, t.Name, w_class, t.Parent, p)
+	w_class := strings.Join(t.WorkerClass, common.WorkerClassSep)
+	p := strings.Join(t.Parallel, common.TestParallelSep)
+	return fmt.Sprintf(common.TestEncodeFormat, t.Name, w_class, t.Parent, p)
 }
 
 // Actions: test1 is assigned at worker1

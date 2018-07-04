@@ -36,17 +36,56 @@ func TestSchedule(t *testing.T) {
 	t1.AddWorkerClass("developer")
 
 	s := NewScheduler(workers, tests)
-	model, f, err := s.Schedule()
+	_, f, err := s.Schedule()
 	fmt.Println(f)
 	if err != nil {
 		t.Error(err)
 	}
-	for k, v := range model {
-		if w, test, err := s.DecodeAssignment(k); err == nil {
-			if w.Name != "mudler" {
-				t.Error("Failed solve, results: ", w, test, k, v)
+	ass, err := s.ScheduleDecode()
+	if err != nil {
+		t.Error(err)
+	}
+	if len(ass) == 0 {
+		t.Error("No New assignment")
+	}
+	for _, a := range ass {
+		fmt.Println(a.Test, a.Worker, a.Value)
+		if a.Test.Name != "lunch" {
+			if a.Value {
+				t.Error("Failed solve, results: ", a.Worker, a.Test, a.Value)
+			}
+		} else {
+			if !a.Value {
+				t.Error("Failed solve, results: ", a.Worker, a.Test, a.Value)
 			}
 		}
 
+	}
+}
+
+func TestInitialState(t *testing.T) {
+	// Simple test to ensure we are not panic'ing for nothing
+	tests := encoder.NewTestColl()
+	workers := encoder.NewWorkerColl()
+
+	w1 := workers.NewWorker("mudler")
+	workers.NewWorker("mudler_away")
+	t1 := tests.NewTest("lunch")
+	tests.NewTest("hiking")
+
+	w1.AddWorkerClass("developer")
+	t1.AddWorkerClass("developer")
+
+	s := NewScheduler(workers, tests)
+
+	ass, err := s.ScheduleDecode()
+	if err != nil {
+		t.Error(err)
+	}
+
+	s.InitialState = ass
+	ass, err = s.ScheduleDecode()
+	if err == nil && len(ass) > 0 {
+		t.Error("New assignment")
 	}
 }

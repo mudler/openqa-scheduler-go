@@ -28,25 +28,8 @@ func TestWorkerAdd(t *testing.T) {
 		t.Fatal("Encode mismatch", w.Encode())
 	}
 
-	// AddWorker(w)
-
 	if workers[0].Name != "w1" {
 		t.Fatal("Test not added to the test list", workers)
-	}
-
-	w2, err := DecodeWorker(w.Encode())
-	if err != nil {
-		t.Fatal("Error while decoding worker", err)
-	}
-	if w2.Name != "w1" {
-		t.Fatal("Test not added to the test list", w2)
-	}
-
-	if w2.Name != "w1" {
-		t.Fatal("Test not added to the test list", w2)
-	}
-	if !w2.ProvidesWorkerClass("qemu32") {
-		t.Fatal("Worker provides qemu32")
 	}
 }
 

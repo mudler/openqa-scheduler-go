@@ -13,6 +13,25 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, see <http://www.gnu.org/licenses/>.
 
-package encoder
+package common
 
-const attFmt = "%s#%s#%s#%s"
+const STATE_RUNNING = "running"
+
+const AssignSep = "@"
+const AssignFmt = "%s" + AssignSep + "%s" + AssignSep + "%s"
+
+const StateSep = "!"
+const StateFmt = "%s" + StateSep + "%s"
+
+const WorkerSep = "#"
+const WorkerInstSep = ":"
+const WorkerClassSep = ","
+const WorkerEncodeFormat = "%s" + WorkerInstSep + "%d" + WorkerSep + "%s"
+
+const TestSep = "#"
+const TestParallelSep = ","
+const TestEncodeFormat = "%s" + TestSep + "%s" + TestSep + "%s" + TestSep + "%s"
+
+// sched states
+const STATE_OLD = "old"
+const STATE_CURRENT = "current"

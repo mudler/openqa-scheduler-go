@@ -17,8 +17,9 @@ package encoder
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
+
+	"github.com/mudler/openqa-scheduler-go/common"
 )
 
 var workers []*Worker
@@ -40,8 +41,6 @@ func (coll *WorkerColl) NewWorker(name string) *Worker {
 func (coll *WorkerColl) AddWorker(t *Worker) {
 	coll.Workers = append(coll.Workers, t)
 }
-
-const workerEncodeFormat = "%s:%d#%s"
 
 type Worker struct {
 	Name        string
@@ -75,23 +74,7 @@ func (w *Worker) Satisfies(t *Test) bool {
 			return true
 		}
 	}
-
 	return false
-}
-
-func DecodeWorker(worker string) (*Worker, error) {
-	worker_att := strings.Split(worker, "#")
-	NameInstance := worker_att[0]
-	WorkerClasses := worker_att[1]
-
-	nameI := strings.Split(NameInstance, ":")
-	wc := strings.Split(WorkerClasses, ",")
-	instance, err := strconv.Atoi(nameI[1])
-	if err != nil {
-		return &Worker{}, err
-	}
-
-	return &Worker{Name: nameI[0], Instance: instance, WorkerClass: wc}, nil
 }
 
 func (w *Worker) AddWorkerClass(wc string) {
@@ -99,7 +82,7 @@ func (w *Worker) AddWorkerClass(wc string) {
 }
 
 func (w *Worker) Encode() string {
-	w_class := strings.Join(w.WorkerClass, ",")
+	w_class := strings.Join(w.WorkerClass, common.WorkerClassSep)
 
-	return fmt.Sprintf(workerEncodeFormat, w.Name, w.Instance, w_class)
+	return fmt.Sprintf(common.WorkerEncodeFormat, w.Name, w.Instance, w_class)
 }

@@ -41,17 +41,14 @@ func main() {
 	t4.AddWorkerClass("qemu64")
 
 	s := scheduler.NewScheduler(workers, tests)
-	model, f, err := s.Schedule()
-	fmt.Println(f)
+	model, err := s.ScheduleDecode()
 	if err != nil {
 		fmt.Println("Error", err)
 		return
 	}
-	fmt.Println("We have a solution!")
-	fmt.Println(model)
-	for k, v := range model {
-		if w, test, err := s.DecodeAssignment(k); err == nil && v {
-			fmt.Println("Test:", test.Name, "Assigned to worker:", w.Name)
+	for _, a := range model {
+		if a.Value {
+			fmt.Println("Test:", a.Test.Name, "Assigned to worker:", a.Worker.Name)
 		}
 	}
 
